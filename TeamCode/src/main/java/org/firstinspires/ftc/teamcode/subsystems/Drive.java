@@ -11,6 +11,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.utility.Pos;
 import static java.lang.Math.*;
 
+import java.util.ArrayList;
+
 public class Drive {
     public DcMotor frontLeft;
     public DcMotor backLeft;
@@ -71,6 +73,11 @@ public class Drive {
         //Just rotational now
         Pos botPos = odo.getPosition();
         Pos diffPos = Pos.subtract(targetPos, botPos);
+
+        if (abs(diffPos.x) <= 15 && abs(diffPos.y) <= 15 && abs(diffPos.r) <= 3) {
+            return true;
+        }
+
         double botRads = botPos.r * Math.PI / 180;
         double pRot = 0.07;
         double pForwards = 0.01;
@@ -116,6 +123,26 @@ public class Drive {
         backRight.setPower(brPower / denominator);
 
         return false;
+    }
+
+    public void movementSet(Pos[] points) {
+        for (Pos p : points) {
+            setPos(p);
+            while(!runPID());
+        }
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
+    }
+
+    public void settle(double seconds) {
+        long startTime = System.currentTimeMillis();
+        while(true) {
+            if (System.currentTimeMillis() - startTime >= seconds * 1000)
+                return;
+            runPID();
+        }
     }
 
     public void setBrakes(boolean isOn) {
